@@ -16,8 +16,9 @@ let print_feed (feed: (username * post) list) : unit =
 
 let repl (conn: Rpc.Connection.t) : unit Deferred.t =
   let stdin = Lazy.force Reader.stdin in
+  printf "> %!";
   Pipe.fold (Reader.lines stdin) ~init:None ~f:(fun cookie line ->
-    match (String.split line ~on:' ', cookie) with
+    (match (String.split line ~on:' ', cookie) with
     | ["register"; username; password], _ -> begin
       register conn (username, password) >>= function
       | Result.Error msg -> (print_endline msg; return cookie)
@@ -58,7 +59,7 @@ let repl (conn: Rpc.Connection.t) : unit Deferred.t =
     | _ -> begin
       printf "Error: unrecognized command %s\n" line;
       return cookie
-    end
+    end) >>= fun cookie -> (printf "> %!"; return cookie)
   ) >>= fun _ ->
   return ()
 
